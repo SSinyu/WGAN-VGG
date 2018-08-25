@@ -130,7 +130,7 @@ def calc_gradeint_penalty(discriminator, real_data, fake_data, lambda_):
     
     
 #### training ####
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-5
 NUM_EPOCHS = 1000
 BATCH_SIZE = 4
 CROP_NUMBER = 100  # The number of patches to extract from a single image. --> total batch img is BATCH_SIZE * CROP_NUMBER
@@ -160,7 +160,6 @@ train_loader = DataLoader(train_dcm, batch_size=BATCH_SIZE, shuffle=True, num_wo
 
 criterion_perceptual = nn.L1Loss()
 
-generator = Generator_CNN()
 discriminator = Discriminator_CNN(input_size=55)
 feature_extractor = FeatureExtractor()
 
@@ -175,43 +174,53 @@ discriminator.to(device)
 feature_extractor.to(device)
 
 criterion_GAN = nn.MSELoss()
-optimizer_G = torch.optim.Adam(generator.parameters(), lr=1e-5, betas=(0.5,0.9))
-optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=1e-5, betas=(0.5,0.9))
+optimizer_G = torch.optim.Adam(generator.parameters(), lr=LEARNING_RATE, betas=(0.5,0.9))
+optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=LEARNING_RATE, betas=(0.5,0.9))
+
+one = torch.FloatTensor([1])
+mone = one * -1
+if torch.cuda.is_available():
+    one = one.cuda()
+    mone = mone.cuda()
 
 
 total_step = len(train_loader)
 for epoch in range(10):
     for i, (inputs, targets) in enumerate(train_loader):
-        inputs = inputs.reshape(-1, 55, 55).to(device)
-        targets = targets.reshape(-1, 55, 55).to(device)
+        input_img = input_img.reshape(-1, PATCH_SIZE, PATCH_SIZE).to(device)
+        target_img = target_img.reshape(-1, PATCH_SIZE, PATCH_SIZE).to(device)
 
-        input_img = torch.tensor(inputs, requires_grad=True).unsqueeze(1).to(device)
-        input_img = input_img.type(torch.FloatTensor)
-        target_img = torch.tensor(targets).unsqueeze(1).to(device)
-        target_img = target_img.type(torch.FloatTensor)
+        input_img = torch.tensor(input_img, requires_grad=True).unsqueeze(1)
+        input_img = input_img.type(torch.FloatTensor).to(device)
+        target_img = torch.tensor(target_img).unsqueeze(1)
+        target_img = target_img.type(torch.FloatTensor).to(device)
 
         # Train D
-        discriminator.zero_grad()
+        for _ in range(D_ITER):
+            discriminator.zero_grad()
 
-        # Train D on real
-        d_real_decision = discriminator(target_img)
-        d_real_error = -torch.mean(d_real_decision)
-        d_real_error.backward()
+            # Train D on real
+            d_real_decision = discriminator(target_img)
+            d_real_error = -torch.mean(d_real_decision)
+            d_real_error.backward(mone)
 
-        # Train D on fake
-        d_fake_data = generator(input_img).detach()
-        d_fake_decision = discriminator(d_fake_data)
-        d_fake_error = torch.mean(d_fake_decision)
-        d_fake_error.backward()
-        optimizer_D.step()
+            # Train D on fake
+            d_fake_data = generator(input_img).detach()
+            d_fake_decision = discriminator(d_fake_data)
+            d_fake_error = torch.mean(d_fake_decision)
+            d_fake_error.backward(one)
 
-        # Train with gradient penalty
-        #gradient_penalty = calc_gradeint_penalty(discriminator, input_img, target_img, 10)
-        #gradient_penalty.backward()
+            # Train with gradient penalty
+            gradient_penalty = calc_gradeint_penalty(discriminator, input_img, target_img, 10)
+            gradient_penalty.backward()
 
-        # Weight Clipping
-        for p in discriminator.parameters():
-            p.data.clamp_(-0.01, 0.01)
+            d_error = d_fake_error - d_real_error + gradient_penalty #W_d+gp
+            #Wasserstein_d = d_real_error - d_fake_error
+            optimizer_D.step()
+
+            # Weight Clipping (WGAN)
+            # for p in discriminator.parameters():
+            #    p.data.clamp_(-0.01, 0.01)
 
         # Train G
         generator.zero_grad()
