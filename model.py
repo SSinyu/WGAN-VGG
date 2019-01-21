@@ -160,6 +160,7 @@ train_loader = DataLoader(train_dcm, batch_size=BATCH_SIZE, shuffle=True, num_wo
 
 criterion_perceptual = nn.L1Loss()
 
+generator = Generator_CNN()
 discriminator = Discriminator_CNN(input_size=55)
 feature_extractor = FeatureExtractor()
 
