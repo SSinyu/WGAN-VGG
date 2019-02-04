@@ -199,6 +199,7 @@ for epoch in range(10):
         # Train D
         for _ in range(D_ITER):
             discriminator.zero_grad()
+            optimizer_D.zero_grad()
 
             # Train D on real
             d_real_decision = discriminator(target_img)
@@ -225,6 +226,7 @@ for epoch in range(10):
 
         # Train G
         generator.zero_grad()
+        optimizer_G.zero_grad()
 
         g_fake_data = generator(input_img)
         dg_fake_decision = discriminator(g_fake_data)
