@@ -6,6 +6,21 @@ from collections import OrderedDict
 from torchvision.models import vgg19
 
 
+class WGAN_VGG_generator(nn.Module):
+    def __init__(self):
+        super(WGAN_VGG_generator, self).__init__()
+        layers = [nn.Conv2d(1,32,3,1,1), nn.ReLU()]
+        for i in range(2, 8):
+            layers.append(nn.Conv2d(32,32,3,1,1))
+            layers.append(nn.ReLU())
+        layers.extend([nn.Conv2d(32,1,3,1,1), nn.ReLU()])
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = self.net(x)
+        return out
+
+
 class WGAN_VGG_discriminator(nn.Module):
     def __init__(self, input_size):
         super(WGAN_VGG_discriminator, self).__init__()
