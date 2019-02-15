@@ -50,7 +50,7 @@ class Solver(object):
         self.lr = args.lr
         self.lambda_ = args.lambda_
 
-        self.WGANVGG = WGAN_VGG()
+        self.WGANVGG = WGAN_VGG(input_size=args.patch_size if args.patch_n else 512)
 
         if (self.multi_gpu) and (torch.cuda.device_count() > 1):
             print('Use {} GPUs'.format(torch.cuda.device_count()))
