@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--load_mode', type=int, default=0, help="0 | 1")
 
     parser.add_argument('--data_path', type=str, default='./AAPM-Mayo-CT-Challenge/')
-    parser.add_argument('--saved_path', type=str, default='./save_img/')
+    parser.add_argument('--saved_path', type=str, default='./npy_img/')
     parser.add_argument('--save_path', type=str, default='./save/')
     parser.add_argument('--test_patient', type=str, default='L506')
     parser.add_argument('--result_fig', type=bool, default=True)
