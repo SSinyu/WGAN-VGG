@@ -1,4 +1,4 @@
-# WGAN_VGG
+# WGAN_VGG [DEPRECATED]
 Implementation of Low Dose CT Image Denoising Using a Generative Adversarial Network with Wasserstein Distance and Perceptual Loss
 https://arxiv.org/abs/1708.00961    
 
